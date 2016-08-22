@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head><title>crossdomain.html</title></head>
+  <body>
+    <script type="text/javascript">
+      function XHR() {
+        try {
+          this.req = new XMLHttpRequest();
+        } catch(e) {
+          try {
+            this.req = new ActiveXObject('Msxml2.XMLHTTP');
+          } catch(e) {
+            try {
+              this.req = new ActiveXObject('Microsoft.XMLHTTP');
+            } catch(e) {
+              throw new Error('No XMLHttpRequest');
+            }
+          }
+        }
+        var that = this;
+        this.req.onreadystatechange = function() {
+          try {
+            if ((that.readyState = that.req.readyState) == 4) {
+              if ((that.status = that.req.status) == 200) {
+                that.responseText = that.req.responseText;
+              }
+            }
+          } catch(e) {
+            this.readyState =
+            this.status = 4;
+            return; // hurf
+          }
+          that.onreadystatechange && that.onreadystatechange();
+        }
+      }
+      XHR.prototype.open = function(method, uri, async) {
+        return this.req.open(method, uri, async);
+      }
+      XHR.prototype.setRequestHeader = function(header, value) {
+        return this.req.setRequestHeader(header, value);
+      }
+      XHR.prototype.send = function(data) {
+        var that = this;
+        setTimeout(function() {
+          try {
+            that.req.send(data);
+          } catch(e) {
+            that.readyState = 4;
+            that.status = 999;
+            that.onreadystatechange();
+          }
+        }, 0);
+      }
+      XHR.prototype.abort = function() {
+        return this.req.abort();
+      }
+      var host = document.location.host;
+      document.domain = /[^.]+\.[^.]+$/.exec(document.location.host);
+      parent.Ajax.subdomainReady(host, XHR);
+    </script>
+  </body>
+</html>
